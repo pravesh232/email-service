@@ -1,36 +1,63 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 class EmailService {
-    constructor(primaryProvider, secondaryProvider) {
-        this.primaryProvider = primaryProvider;
-        this.secondaryProvider = secondaryProvider;
+    constructor(primary, secondary) {
+        this.sentEmails = new Set(); // For idempotency
+        this.requestTimestamps = []; // For rate limiting
+        this.failureCount = 0; // For circuit breaker
+        this.circuitOpen = false;
+        this.circuitResetTimeout = null;
+        this.primary = primary;
+        this.secondary = secondary;
     }
-    async sendEmail(email) {
-        try {
-            await this.primaryProvider.send(email);
-            console.log('Email sent by primary provider');
-        }
-        catch (err) {
-            if (err instanceof Error) {
-                console.error(`Primary provider failed: ${err.message}`);
-            }
-            else {
-                console.error('Primary provider failed: Unknown error');
-            }
+    isRateLimited() {
+        const now = Date.now();
+        this.requestTimestamps = this.requestTimestamps.filter(t => now - t < 10000);
+        if (this.requestTimestamps.length >= 5)
+            return true;
+        this.requestTimestamps.push(now);
+        return false;
+    }
+    async trySend(provider, email, retries = 3) {
+        for (let i = 0; i < retries; i++) {
             try {
-                await this.secondaryProvider.send(email);
-                console.log('Email sent by secondary provider');
+                const result = await provider.send(email);
+                if (result.success)
+                    return result;
             }
             catch (err) {
-                if (err instanceof Error) {
-                    console.error(`Secondary provider failed: ${err.message}`);
-                }
-                else {
-                    console.error('Secondary provider failed: Unknown error');
-                }
-                throw new Error('Both providers failed to send email');
+                await new Promise(res => setTimeout(res, Math.pow(2, i) * 100));
             }
         }
+        return { success: false };
+    }
+    openCircuitBreaker() {
+        this.circuitOpen = true;
+        this.circuitResetTimeout = setTimeout(() => {
+            this.failureCount = 0;
+            this.circuitOpen = false;
+        }, 30000);
+    }
+    async sendEmail(email) {
+        if (this.isRateLimited())
+            return { status: 'rate_limited' };
+        if (this.sentEmails.has(email.id))
+            return { status: 'duplicate' };
+        if (this.circuitOpen)
+            return { status: 'circuit_open' };
+        let result = await this.trySend(this.primary, email);
+        if (!result.success) {
+            this.failureCount++;
+            result = await this.trySend(this.secondary, email);
+        }
+        if (!result.success) {
+            this.failureCount++;
+            if (this.failureCount >= 3)
+                this.openCircuitBreaker();
+            return { status: 'failed' };
+        }
+        this.sentEmails.add(email.id);
+        return { status: 'sent', provider: result.provider };
     }
 }
 exports.default = EmailService;

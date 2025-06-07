@@ -4,14 +4,22 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express"));
-const dotenv_1 = __importDefault(require("dotenv"));
-dotenv_1.default.config();
+const ProviderA_1 = __importDefault(require("./providers/ProviderA"));
+const ProviderB_1 = __importDefault(require("./providers/ProviderB"));
+const EmailService_1 = __importDefault(require("./EmailService"));
 const app = (0, express_1.default)();
-const PORT = process.env.PORT || 3000;
-// Root route handler
-app.get('/', (req, res) => {
+app.use(express_1.default.json());
+const emailService = new EmailService_1.default(new ProviderA_1.default(), new ProviderB_1.default());
+app.post('/send', async (req, res) => {
+    try {
+        const result = await emailService.sendEmail(req.body);
+        res.status(200).json(result);
+    }
+    catch (err) {
+        res.status(500).json({ error: 'Internal Server Error', details: err.message });
+    }
+});
+app.get('/', (_req, res) => {
     res.send('Email Service is up and running! 🚀');
 });
-app.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
-});
+app.listen(3000, () => console.log('🚀 Server running on port 3000'));

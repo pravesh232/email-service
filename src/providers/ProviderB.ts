@@ -1,8 +1,8 @@
-import { EmailProvider } from './EmailProvider';
-import { EmailRequest } from '../types';
+import { EmailProvider, EmailPayload } from '../types';
 
-export class ProviderB implements EmailProvider {
-  async send(email: EmailRequest): Promise<void> {
-    console.log(`ProviderB sending email to ${email.to}`);
+export default class ProviderB implements EmailProvider {
+  async send(email: EmailPayload): Promise<{ success: boolean; provider: string }> {
+    console.log(`ProviderB: Sending email ${email.id}`);
+    return { success: true, provider: 'ProviderB' };
   }
 }

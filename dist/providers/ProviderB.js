@@ -1,9 +1,9 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.ProviderB = void 0;
 class ProviderB {
     async send(email) {
-        console.log(`ProviderB sending email to ${email.to}`);
+        console.log(`ProviderB: Sending email ${email.id}`);
+        return { success: true, provider: 'ProviderB' };
     }
 }
-exports.ProviderB = ProviderB;
+exports.default = ProviderB;

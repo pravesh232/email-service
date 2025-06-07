@@ -1,5 +1,6 @@
-import { EmailRequest } from '../types';
+import { EmailPayload } from '../types';
 
 export interface EmailProvider {
-  send(email: EmailRequest): Promise<void>;
+  send(email: EmailPayload): Promise<{ success: boolean; provider: string }>;
 }
+  
