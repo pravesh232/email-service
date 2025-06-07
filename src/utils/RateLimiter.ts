@@ -1,20 +1,16 @@
 export class RateLimiter {
-  private maxRequests: number;
-  private interval: number;
-  private timestamps: number[] = [];
+  private timestamps: Map<string, number[]> = new Map();
 
-  constructor(maxRequests: number, intervalMs: number = 1000) {
-    this.maxRequests = maxRequests;
-    this.interval = intervalMs;
-  }
+  constructor(private limit: number, private intervalMs: number) {}
 
-  allow(): boolean {
+  allow(recipient: string): boolean {
     const now = Date.now();
-    this.timestamps = this.timestamps.filter(t => now - t < this.interval);
-    if (this.timestamps.length < this.maxRequests) {
-      this.timestamps.push(now);
-      return true;
-    }
-    return false;
+    const times = this.timestamps.get(recipient) ?? [];
+
+    const recent = times.filter(t => now - t < this.intervalMs);
+    recent.push(now);
+    this.timestamps.set(recipient, recent);
+
+    return recent.length <= this.limit;
   }
 }

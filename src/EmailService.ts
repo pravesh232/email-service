@@ -1,52 +1,42 @@
-import { Email, EmailProvider } from './providers/EmailProvider';
-import { RateLimiter } from './utils/RateLimiter';
-import { Logger } from './utils/Logger';
+import { EmailProvider } from './providers/EmailProvider';
 
-const delay = (ms: number) => new Promise(res => setTimeout(res, ms));
+export interface EmailRequest {
+  id: string;
+  to: string;
+  subject: string;
+  body: string;
+}
 
-export class EmailService {
-  private providers: EmailProvider[];
-  private rateLimiter = new RateLimiter(5);
-  private sentCache = new Set<string>();
-  private statusMap = new Map<string, string>();
+export default class EmailService {
+  private primaryProvider: EmailProvider;
+  private secondaryProvider: EmailProvider;
 
-  constructor(providers: EmailProvider[]) {
-    this.providers = providers;
+  constructor(primaryProvider: EmailProvider, secondaryProvider: EmailProvider) {
+    this.primaryProvider = primaryProvider;
+    this.secondaryProvider = secondaryProvider;
   }
 
-  async sendEmail(email: Email): Promise<boolean> {
-    if (this.sentCache.has(email.id)) {
-      Logger.log(`Duplicate email prevented: ${email.id}`);
-      return true;
-    }
-
-    for (const [index, provider] of this.providers.entries()) {
-      for (let attempt = 1; attempt <= 3; attempt++) {
-        if (!this.rateLimiter.allow()) {
-          Logger.log('Rate limit exceeded, delaying...');
-          await delay(1000);
+  async sendEmail(email: EmailRequest): Promise<void> {
+    try {
+      await this.primaryProvider.send(email);
+      console.log('Email sent by primary provider');
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        console.error(`Primary provider failed: ${err.message}`);
+      } else {
+        console.error('Primary provider failed: Unknown error');
+      }
+      try {
+        await this.secondaryProvider.send(email);
+        console.log('Email sent by secondary provider');
+      } catch (err: unknown) {
+        if (err instanceof Error) {
+          console.error(`Secondary provider failed: ${err.message}`);
+        } else {
+          console.error('Secondary provider failed: Unknown error');
         }
-
-        try {
-          this.statusMap.set(email.id, `sending_with_provider_${index}`);
-          await provider.send(email);
-          this.statusMap.set(email.id, 'sent');
-          this.sentCache.add(email.id);
-          Logger.log(`Email sent via provider ${index}`);
-          return true;
-        } catch (err) {
-          Logger.log(`Provider ${index} failed on attempt ${attempt}: ${err}`);
-          await delay(2 ** attempt * 100);
-        }
+        throw new Error('Both providers failed to send email');
       }
     }
-
-    this.statusMap.set(email.id, 'failed');
-    Logger.log(`Email failed: ${email.id}`);
-    return false;
-  }
-
-  getStatus(emailId: string): string | undefined {
-    return this.statusMap.get(emailId);
   }
 }

@@ -1,0 +1,1 @@
+{"root":["./src/emailservice.ts","./src/index.ts","./src/server.ts","./src/types.ts","./src/providers/emailprovider.ts","./src/providers/providera.ts","./src/providers/providerb.ts","./src/utils/circuitbreaker.ts","./src/utils/logger.ts","./src/utils/ratelimiter.ts"],"version":"5.8.3"}

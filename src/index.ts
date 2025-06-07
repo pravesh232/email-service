@@ -1,18 +1,16 @@
-import { EmailService } from './EmailService';
 import { ProviderA } from './providers/ProviderA';
 import { ProviderB } from './providers/ProviderB';
+import EmailService from './EmailService';
 
-const emailService = new EmailService([new ProviderA(), new ProviderB()]);
+const primaryProvider = new ProviderA();
+const secondaryProvider = new ProviderB();
 
-(async () => {
-  const email = {
-    id: 'email-123',
-    to: 'user@example.com',
-    subject: 'Test Email',
-    body: 'This is a test email.'
-  };
+const emailService = new EmailService(primaryProvider, secondaryProvider);
 
-  const result = await emailService.sendEmail(email);
-  console.log('Send result:', result);
-  console.log('Status:', emailService.getStatus(email.id));
-})();
+// Example usage (this can be moved elsewhere or exposed via API)
+emailService.sendEmail({
+  id: 'test1',
+  to: 'user@example.com',
+  subject: 'Hello',
+  body: 'Test email',
+});

@@ -1,10 +1,5 @@
-export interface Email {
-  id: string;
-  to: string;
-  subject: string;
-  body: string;
-}
+import { EmailRequest } from '../types';
 
 export interface EmailProvider {
-  send(email: Email): Promise<void>;
+  send(email: EmailRequest): Promise<void>;
 }
