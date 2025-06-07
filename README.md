@@ -102,6 +102,50 @@ This project uses **mock email providers** for demonstration and testing purpose
 
   🧵 Add distributed queue for async processing
 
+## 🚀 Live Deployment
+
+   > 🔗 [https://email-service-hn8m.onrender.com](https://email-service-hn8m.onrender.com)
+
+This service is live and deployed on **Render**.
+
+### 📮 Send Email Example
+
+   **POST** `/send`
+   
+   ```json
+   {
+     "id": "email-001",
+     "to": "user@example.com",
+     "subject": "Hello!",
+     "body": "This is a test email."
+   }
+
+## 🧪 Sample Response
+
+   {
+  "status": "sent",
+  "provider": "ProviderA"
+   }
+
+## 🛠️ Deployment Steps (Render)
+
+   ->Go to https://render.com
+   
+   ->Create a New Web Service
+   
+   ->Connect your GitHub repo
+   
+   ->Set:
+   
+        -- Build Command: npm run build
+         
+        -- Start Command: npm start
+         
+        -- Root Directory: .
+   
+   ->Deploy 🎉
+
+
 ## 👤 Author
   Pravesh Kumar Pathak
   GitHub: @pravesh232
