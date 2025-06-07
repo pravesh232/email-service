@@ -112,20 +112,20 @@ This service is live and deployed on **Render**.
 
    **POST** `/send`
    
-   ```json
-   {
-     "id": "email-001",
-     "to": "user@example.com",
-     "subject": "Hello!",
-     "body": "This is a test email."
-   }
+      ```json
+      {
+        "id": "email-001",
+        "to": "user@example.com",
+        "subject": "Hello!",
+        "body": "This is a test email."
+      }
 
 ## 🧪 Sample Response
 
-   {
-  "status": "sent",
-  "provider": "ProviderA"
-   }
+      {
+     "status": "sent",
+     "provider": "ProviderA"
+      }
 
 ## 🛠️ Deployment Steps (Render)
 
